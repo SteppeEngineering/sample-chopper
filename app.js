@@ -70,21 +70,23 @@ async function processAudioFile(file) {
         const minDistance = parseFloat(minDistanceSlider.value);
         audioProcessor.analyzeForChopPoints(threshold, minDuration, minDistance);
 
-        // Initialize waveform renderer
-        if (!waveformRenderer) {
-            waveformRenderer = new WaveformRenderer(waveformCanvas, audioProcessor);
-        }
-        waveformRenderer.updateWaveform();
-
         // Update UI
         fileName.textContent = audioProcessor.fileName;
         updateChopCount();
         
-        // Show controls and waveform
+        // Show controls and waveform FIRST (so canvas has proper dimensions)
         uploadSection.style.display = 'none';
         controls.style.display = 'block';
         waveformContainer.style.display = 'block';
         samplesList.style.display = 'block';
+        
+        // Wait for layout to complete, then initialize waveform renderer
+        await new Promise(resolve => setTimeout(resolve, 0));
+        
+        if (!waveformRenderer) {
+            waveformRenderer = new WaveformRenderer(waveformCanvas, audioProcessor);
+        }
+        waveformRenderer.updateWaveform();
 
         // Generate samples list
         updateSamplesList();

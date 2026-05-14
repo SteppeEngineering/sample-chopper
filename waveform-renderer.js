@@ -114,13 +114,17 @@ class WaveformRenderer {
 
         const pixelWidth = width / this.waveformData.length;
 
+        // Draw mirrored waveform (stereo style - top and bottom from centerline)
         this.waveformData.forEach((data, i) => {
             const x = i * pixelWidth;
-            const minY = midY - (data.min * amplitudeScale);
-            const maxY = midY - (data.max * amplitudeScale);
-            const rectHeight = Math.max(1, maxY - minY);
-
-            this.ctx.fillRect(x, minY, Math.max(1, pixelWidth), rectHeight);
+            
+            // Draw positive amplitude (upward from center)
+            const positiveHeight = Math.abs(data.max) * amplitudeScale;
+            this.ctx.fillRect(x, midY - positiveHeight, Math.max(1, pixelWidth), positiveHeight);
+            
+            // Draw negative amplitude (downward from center)
+            const negativeHeight = Math.abs(data.min) * amplitudeScale;
+            this.ctx.fillRect(x, midY, Math.max(1, pixelWidth), negativeHeight);
         });
     }
 
@@ -181,10 +185,19 @@ class WaveformRenderer {
     }
 
     updateWaveform() {
+        // Force canvas setup to ensure proper dimensions
+        this.setupCanvas();
+        
+        // Get waveform data
         this.waveformData = this.audioProcessor.getWaveformData(
             this.canvas.width / window.devicePixelRatio
         );
+        
+        // Force immediate render
         this.render();
+        
+        // Request another render on next frame to ensure visibility
+        requestAnimationFrame(() => this.render());
     }
 
     startPlayheadAnimation() {
